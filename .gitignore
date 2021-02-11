@@ -16,4 +16,7 @@ yarn-error.log
 .DS_Store
 
 /public/normal_images/*
+!/public/normal_images/.gitkeep
+
 /public/thumbnail_images/*
+!/public/thumbnail_images/.gitkeep

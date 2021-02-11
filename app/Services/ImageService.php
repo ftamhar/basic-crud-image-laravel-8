@@ -74,7 +74,7 @@ class ImageService
 
         if (!$image) {
             return [
-                "status" => 404,
+                "status" => 204,
                 "message" => "data not found"
             ];
         }
@@ -95,5 +95,4 @@ class ImageService
             "message" => "Image deleted successfully"
         ];
     }
-
 }

@@ -18,3 +18,5 @@ Route::get('/',[\App\Http\Controllers\ImageController::class, 'home'])->name('ho
 Route::resource('images', \App\Http\Controllers\ImageController::class)->only([
     'index', 'store', 'destroy', 'update'
 ]);
+
+Route::get('images/table',[\App\Http\Controllers\ImageController::class, 'image_table'])->name('images.table');

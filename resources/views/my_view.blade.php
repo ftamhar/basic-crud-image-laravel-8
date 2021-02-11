@@ -9,7 +9,7 @@
     <style>
         .td-center {
             text-align: center;
-            vertical-align: middle!important;
+            vertical-align: middle !important;
         }
     </style>
     <title>Upload Image</title>
@@ -21,6 +21,15 @@
             @if (session('success'))
                 <div class="alert alert-success">
                     {{ session('success') }}
+                </div>
+            @endif
+            @if ($errors->any())
+                <div class="alert alert-danger">
+                    <ul>
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
                 </div>
             @endif
             <form action="" method="post" enctype="multipart/form-data">
@@ -36,42 +45,10 @@
     </div>
 
     <div class="row">
-        <div class="col-md">
+        <div class="col-md" id="for-table">
 
-            <table class="table table-striped table-bordered table-responsive-sm">
-                <thead>
-                <tr>
-                    <th class="text-center">id</th>
-                    <th class="text-center">Image</th>
-                    <th class="text-center">Update</th>
-                    <th class="text-center">Delete</th>
-                </tr>
-                </thead>
-                <tbody>
-                @foreach($images as $image)
-                    <tr>
-                        <td class="td-center">{{ $image->id }}</td>
-                        <td class="td-center"><img src="{{url('/thumbnail_images/'. $image->name)}}" alt="My Image">
-                        </td>
-                        <td>
-                            <form action="images/{{ $image->id }}" method="post" enctype="multipart/form-data">
-                                <input name="_method" type="hidden" value="PUT">
-                                @csrf
-                                <div class="form-group">
-                                    <label for="myfile">Select an image:</label>
-                                    <input type="file" id="myfile" class="form-control" required name="image">
-                                </div>
+            @include('images_table')
 
-                                <button type="submit" class="btn btn-primary">Update</button>
-                            </form>
-                        </td>
-                        <td class="td-center">
-                            <button onclick="hapus({{ $image->id }})" class="btn btn-danger">Delete</button>
-                        </td>
-                    </tr>
-                @endforeach
-                </tbody>
-            </table>
         </div>
     </div>
 
@@ -85,13 +62,22 @@
                 url: '{!! url('images') !!}/' + id,
                 type: 'DELETE',
                 data: {"_token": "{{ csrf_token() }}"},
-                success: function (result) {
+                success: function (data, textStatus, request) {
                     // Do something with the result
-                    if (result.status === 200) {
-                        location.reload();
+                    if (request.status === 200) {
+                        $.get("{!! route('images.table') !!}", function (data, status) {
+                            alert('Data berhasil dihapus');
+                            $('#for-table').html(data);
+                        });
+                    } else if (request.status === 204) {
+                        alert("Data tidak ditemukan")
                     } else {
-                        alert(result.message)
+                        alert(data.message)
                     }
+                },
+                error: function (xhr, ajaxOptions, thrownError) {
+                    alert(xhr);
+                    alert(thrownError);
                 }
             });
         }

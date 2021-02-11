@@ -12,6 +12,12 @@ class ImageController extends Controller
     {
         return view('my_home');
     }
+
+    public function image_table()
+    {
+        return view('images_table');
+    }
+
     /**
      * Display a listing of the resource.
      *
@@ -19,8 +25,7 @@ class ImageController extends Controller
      */
     public function index()
     {
-        $images = Image::all();
-        return view('my_view', compact('images'));
+        return view('my_view');
     }
 
     /**
@@ -102,10 +107,10 @@ class ImageController extends Controller
     {
         $imageService = new ImageService();
         $res = $imageService->statusDeleteImageInFile($id);
-        if($res['status'] == 200) {
+        if ($res['status'] == 200) {
             Image::destroy($id);
         }
-        return response()->json($res);
+        return response()->json($res, $res['status']);
 
     }
 }
