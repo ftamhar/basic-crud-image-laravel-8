@@ -8,60 +8,65 @@ use Image as ImageFile;
 
 class ImageService
 {
+    public $imagePath;
+    private $image;
+    private $imageName;
+    private $thumbPath;
+    private $resizePath;
 
     /**
-     * @param null $id
-     * @return \Illuminate\Contracts\Routing\UrlGenerator|string
+     * ImageService constructor.
+     * @param $image
      */
-    public function saveImage($id = null)
+    public function __construct($image = null)
     {
-        $image = request()->file('image');
-        $nameImage = $this->imageName($image);
-        $nameImage = str_replace(' ', '_', $nameImage);
+        $this->image = $image;
 
-        $thumbImage = ImageFile::make($image->getRealPath())->resize(100, 100);
-        $thumbPath = public_path() . '/thumbnail_images/' . $nameImage;
-        ImageFile::make($thumbImage)->save($thumbPath);
-
-        $oriPath = public_path() . '/normal_images/' . $nameImage;
-        ImageFile::make($image)->save($oriPath);
-
-        $this->saveOrUpdateDB($id, $nameImage, $oriPath, $thumbPath);
-
-        return url('/normal_images/' . $nameImage);
+        if ($image) $this->imageName = $this->getImageName($image);
     }
 
     /**
      * @param $image
      * @return mixed|string
      */
-    private function imageName($image)
+    private function getImageName($image, $size = null)
     {
         $onlyName = pathinfo($image->getClientOriginalName(), PATHINFO_FILENAME);
-        $onlyName = $onlyName . "_" . strtotime(now()) . "." . $image->extension();
+        $size ? $onlyName = $onlyName . "_" . strtotime(now()) . "_" . $size . "." . $image->extension()
+            : $onlyName = $onlyName . "_" . strtotime(now()) . "." . $image->extension();
         $onlyName = str_replace(" ", "_", $onlyName);
 
         return $onlyName;
     }
 
     /**
-     * @param $id
-     * @param $nameImage
-     * @param $oriPath
-     * @param $thumbPath
+     * create new data on database
      */
-    private function saveOrUpdateDB($id, $nameImage, $oriPath, $thumbPath)
+    public function createDataToDB()
     {
-        if (!$id) {
-            $mouseImage = new Image;
-        } else {
-            $mouseImage = Image::find($id);
-            $this->statusDeleteImageInFile($id);
-        }
-        $mouseImage->name = $nameImage;
-        $mouseImage->normal_path = $oriPath;
-        $mouseImage->thumb_path = $thumbPath;
+        $mouseImage = new Image;
+        $this->saveOrUpdateDB($mouseImage);
+    }
+
+    /**
+     * @param $mouseImage
+     */
+    private function saveOrUpdateDB($mouseImage)
+    {
+        $mouseImage->name = $this->imageName;
+        $mouseImage->normal_path = $this->imagePath;
+        $mouseImage->resize_path = $this->resizePath;
+        $mouseImage->thumb_path = $this->thumbPath;
         $mouseImage->save();
+    }
+
+    /**
+     * @param $id
+     */
+    public function updateDataInDB($id)
+    {
+        $mouseImage = Image::find($id);
+        $this->saveOrUpdateDB($mouseImage);
     }
 
     /**
@@ -90,9 +95,47 @@ class ImageService
                 "message" => "Failed to delete file"
             ];
         }
+        if (!unlink($image->resize_path)) {
+            return [
+                "status" => 500,
+                "message" => "Failed to delete file"
+            ];
+        }
         return [
             "status" => 200,
             "message" => "Image deleted successfully"
         ];
+    }
+
+    /**
+     * @param int $size
+     * save resize image based on user input
+     */
+    public function saveResizeImage(int $size)
+    {
+        $this->resizePath = public_path() . '/resize_images/' . $this->getImageName($this->image, $size);
+        ImageFile::make($this->image)
+            ->resize($size, NULL, function ($constraint) {
+                $constraint->aspectRatio();
+            })
+            ->save($this->resizePath);
+    }
+
+    /**
+     * save thumbnail image
+     */
+    public function saveThumbImage()
+    {
+        $this->thumbPath = public_path() . '/thumbnail_images/' . $this->imageName;
+        ImageFile::make($this->image->getRealPath())->resize(100, 100)->save($this->thumbPath);
+    }
+
+    /**
+     * save original image
+     */
+    public function saveOriginalImage()
+    {
+        $this->imagePath = public_path() . '/normal_images/' . $this->imageName;
+        ImageFile::make($this->image)->save($this->imagePath);
     }
 }

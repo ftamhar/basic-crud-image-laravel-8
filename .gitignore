@@ -20,3 +20,6 @@ yarn-error.log
 
 /public/thumbnail_images/*
 !/public/thumbnail_images/.gitkeep
+
+/public/resize_images/*
+!/public/resize_images/.gitkeep

@@ -15,7 +15,7 @@
             <td class="td-center"><img src="{{url('/thumbnail_images/'. $image->name)}}" alt="My Image">
             </td>
             <td>
-                <form action="images/{{ $image->id }}" method="post" enctype="multipart/form-data">
+                <form action="{{ route('images.update', $image->id) }}" method="post" enctype="multipart/form-data">
                     <input name="_method" type="hidden" value="PUT">
                     @csrf
                     <div class="form-group">

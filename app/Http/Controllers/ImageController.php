@@ -49,10 +49,13 @@ class ImageController extends Controller
         $this->validate($request, [
             'image' => 'required|image|mimes:jpeg,png,jpg,gif,svg',
         ]);
-        $imageService = new ImageService();
-        $urlPath = $imageService->saveImage();
+        $imageService = new ImageService($request->file('image'));
+        $imageService->saveOriginalImage();
+        $imageService->saveThumbImage();
+        $imageService->saveResizeImage(1024);
+        $imageService->createDataToDB();
 
-        return redirect()->back()->with('success', 'Gambar berhasil disimpan di lokasi ' . $urlPath);
+        return redirect()->back()->with('success', 'Gambar berhasil disimpan di lokasi ' . $imageService->imagePath);
     }
 
     /**
@@ -90,10 +93,15 @@ class ImageController extends Controller
             'image' => 'required|image|mimes:jpeg,png,jpg,gif,svg',
         ]);
 
-        $imageService = new ImageService();
+        $imageService = new ImageService($request->file('image'));
+        $imageService->saveOriginalImage();
+        $imageService->saveThumbImage();
+        $imageService->saveResizeImage(1024);
+        $imageService->statusDeleteImageInFile($id);
 
-        $urlPath = $imageService->saveImage($id);
-        return redirect()->back()->with('success', 'Gambar berhasil disimpan di lokasi ' . $urlPath);
+        $imageService->updateDataInDB($id);
+
+        return redirect()->back()->with('success', 'Gambar berhasil disimpan di lokasi ' . $imageService->imagePath);
 
     }
 
@@ -111,6 +119,5 @@ class ImageController extends Controller
             Image::destroy($id);
         }
         return response()->json($res, $res['status']);
-
     }
 }
